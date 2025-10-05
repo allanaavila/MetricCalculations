@@ -9,6 +9,10 @@ public class LCOMMetric extends AbstractMetricCalculator {
         super(data);
     }
 
+    /**
+     * CÁLCULO LCOM
+     */
+
     @Override
     public double calculateMetric() {
         int P = analysisData.unrelatedMethodPairs;

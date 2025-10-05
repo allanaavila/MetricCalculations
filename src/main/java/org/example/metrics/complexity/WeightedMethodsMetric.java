@@ -9,6 +9,10 @@ public class WeightedMethodsMetric extends AbstractMetricCalculator {
         super(data);
     }
 
+    /**
+     * CÁLCULO WMC
+     */
+
     @Override
     public double calculateMetric() {
         // No mundo real, seria a soma das CCs de cada método.

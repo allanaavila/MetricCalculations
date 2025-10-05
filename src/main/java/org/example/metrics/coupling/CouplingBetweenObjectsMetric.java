@@ -9,6 +9,10 @@ public class CouplingBetweenObjectsMetric extends AbstractMetricCalculator {
         super(data);
     }
 
+    /**
+     * CÁLCULO CBO
+     */
+
     @Override
     public double calculateMetric() {
         // O cálculo é o tamanho do Set que simula as classes usadas

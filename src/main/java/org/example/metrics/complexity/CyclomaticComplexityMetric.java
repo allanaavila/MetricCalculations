@@ -9,6 +9,10 @@ public class CyclomaticComplexityMetric extends AbstractMetricCalculator {
         super(data);
     }
 
+    /**
+     * CÁLCULO CC
+     */
+
     @Override
     public double calculateMetric() {
         // Fórmula CC = 1 + totalDecisionPoints

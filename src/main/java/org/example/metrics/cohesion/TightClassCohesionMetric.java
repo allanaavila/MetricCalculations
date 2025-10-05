@@ -9,6 +9,10 @@ public class TightClassCohesionMetric extends AbstractMetricCalculator {
         super(data);
     }
 
+    /**
+     * CÁLCULO TCC
+     */
+
     @Override
     public double calculateMetric() {
         int P = analysisData.relatedMethodPairs;

@@ -9,6 +9,10 @@ public class DepthOfInheritanceMetric extends AbstractMetricCalculator {
         super(data);
     }
 
+    /**
+     * CÁLCULO DIT
+     */
+
     @Override
     public double calculateMetric() {
         // O cálculo é o próprio valor da profundidade
