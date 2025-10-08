@@ -76,11 +76,13 @@ public class MetricSimulationApp {
     }
 
 
+// O método selectScenario() precisa ser atualizado assim:
+
     private static void selectScenario(Scanner scanner, int metricChoice) {
         System.out.println("\nEscolha o cenário para o cálculo:");
         System.out.println("A. Cenário de ALTO RISCO (Valores Fixos)");
         System.out.println("B. Cenário de BAIXO RISCO (Valores Fixos)");
-        System.out.println("C. ENTRADA MANUAL de todos os dados de análise");
+        System.out.println("C. ENTRADA MANUAL (Apenas os dados necessários)"); // Texto atualizado
         System.out.print("Opção (A/B/C): ");
 
         String scenarioChoice = scanner.next().toUpperCase();
@@ -88,81 +90,101 @@ public class MetricSimulationApp {
 
         if (scenarioChoice.equals("A")) {
             data = HIGH_RISK_DATA;
-            System.out.println("\n--- Cenário Selecionado: ALTO RISCO ---");
+            System.out.println("\n--- Cenário Selecionado: ALTO RISCO (Fixo) ---");
         } else if (scenarioChoice.equals("B")) {
             data = LOW_RISK_DATA;
-            System.out.println("\n--- Cenário Selecionado: BAIXO RISCO ---");
+            System.out.println("\n--- Cenário Selecionado: BAIXO RISCO (Fixo) ---");
         } else if (scenarioChoice.equals("C")) {
-            // Nova chamada para entrada de dados manual
-            data = getManualInputData(scanner);
-            if (data == null) return; // Retorna se a entrada falhar
-            System.out.println("\n--- Cenário Selecionado: MANUAL ---");
+            // CHAMA O NOVO MÉTODO DE ENTRADA INTELIGENTE
+            data = getRelevantManualInputData(scanner, metricChoice);
+            if (data == null) return;
+            System.out.println("\n--- Cenário Selecionado: MANUAL DINÂMICO ---");
         } else {
             System.out.println("Opção de cenário inválida. Retornando ao menu principal.");
             return;
         }
-
         calculateAndReport(metricChoice, data);
     }
 
-    // --- NOVO MÉTODO PARA ENTRADA MANUAL DE DADOS ---
-    private static ClassAnalysisData getManualInputData(Scanner scanner) {
-        System.out.println("\n================= ENTRADA MANUAL DE DADOS DE ANÁLISE =================");
+
+ // O método getManualInputData() será substituído por este:
+    private static ClassAnalysisData getRelevantManualInputData(Scanner scanner, int metricChoice) {
+        System.out.println("\n================= ENTRADA MANUAL DE DADOS =================");
+
+        int cc = 0, dit = 1, rel = 10, unrel = 1, cloc = 50;
+        Set<String> coupled = Set.of();
+        List<String> children = List.of();
+
+        if (scanner.hasNextLine()) scanner.nextLine();
+
         try {
-            // CC, WMC: totalDecisionPoints
-            System.out.print("1. Total de Pontos de Decisão (if/while/for): ");
-            int totalDecisionPoints = scanner.nextInt();
+            System.out.println("--- Insira apenas os dados necessários para o cálculo: ---\n");
 
-            // CBO, RFC: coupledClasses
-            scanner.nextLine(); // Consome a linha pendente
-            System.out.print("2. Classes Acopladas (separadas por vírgula, ex: User, DB, Log): ");
-            String coupledInput = scanner.nextLine();
-            Set<String> coupledClasses = Arrays.stream(coupledInput.split(","))
-                    .map(String::trim)
-                    .filter(s -> !s.isEmpty())
-                    .collect(Collectors.toSet());
+            // --- 1. Complexidade Ciclomática (CC) e WMC ---
+            if (metricChoice == 1 || metricChoice == 5) {
+                System.out.print("Pontos de Decisão (if, for, while): ");
+                cc = scanner.nextInt();
+            }
 
-            // DIT: inheritanceDepth
-            System.out.print("3. Profundidade da Herança (DIT, 1 = herda de Object): ");
-            int inheritanceDepth = scanner.nextInt();
+            // --- 2. Acoplamento (CBO) e RFC ---
+            if (metricChoice == 2 || metricChoice == 6) {
+                System.out.print("Nomes de Classes Acopladas (separadas por vírgula): ");
+                String coupledInput = scanner.nextLine(); // Usar nextLine() para ler toda a linha
+                if (coupledInput.isEmpty()) coupledInput = scanner.nextLine(); // Às vezes precisa de uma segunda leitura
 
-            // LCOM, TCC: relatedMethodPairs
-            System.out.print("4. Pares de Métodos RELACIONADOS (compartilham atributos): ");
-            int relatedMethodPairs = scanner.nextInt();
+                coupled = Arrays.stream(coupledInput.split(","))
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .collect(Collectors.toSet());
+            }
 
-            // LCOM, TCC: unrelatedMethodPairs
-            System.out.print("5. Pares de Métodos NÃO RELACIONADOS: ");
-            int unrelatedMethodPairs = scanner.nextInt();
+            // --- 3. Coesão (LCOM) e TCC ---
+            if (metricChoice == 3 || metricChoice == 7) {
+                System.out.print("Pares de Métodos RELACIONADOS (Q): ");
+                rel = scanner.nextInt();
+                System.out.print("Pares de Métodos NÃO RELACIONADOS (P): ");
+                unrel = scanner.nextInt();
+            }
 
-            // NOC: directChildrenClasses
-            scanner.nextLine();
-            System.out.print("6. Classes Filhas Diretas (separadas por vírgula, ex: Funcionario, Gerente): ");
-            String childrenInput = scanner.nextLine();
-            List<String> directChildrenClasses = Arrays.stream(childrenInput.split(","))
-                    .map(String::trim)
-                    .filter(s -> !s.isEmpty())
-                    .collect(Collectors.toList());
+            // --- 4. Herança (DIT) ---
+            if (metricChoice == 4) {
+                System.out.print("Profundidade da Herança (DIT, 1 = Object): ");
+                dit = scanner.nextInt();
+            }
 
-            // CLOC: nonBlankLinesOfCode
-            System.out.print("7. Linhas de Código Não Vazias (CLOC): ");
-            int nonBlankLinesOfCode = scanner.nextInt();
+            // --- 5. Herança (NOC) ---
+            if (metricChoice == 8) {
+                System.out.print("Nomes de Classes Filhas Diretas (separadas por vírgula): ");
+                String childrenInput = scanner.nextLine();
+                if (childrenInput.isEmpty()) childrenInput = scanner.nextLine();
+
+                children = Arrays.stream(childrenInput.split(","))
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .collect(Collectors.toList());
+            }
+
+            // --- 6. Tamanho (CLOC) ---
+            if (metricChoice == 9) {
+                System.out.print("Linhas de Código Não Vazias (CLOC): ");
+                cloc = scanner.nextInt();
+            }
 
             // Retorna o novo objeto ClassAnalysisData com os valores inseridos
             return new ClassAnalysisData(
-                    totalDecisionPoints, coupledClasses, inheritanceDepth,
-                    relatedMethodPairs, unrelatedMethodPairs,
-                    directChildrenClasses, nonBlankLinesOfCode
+                    cc, coupled, dit,
+                    rel, unrel, children,
+                    cloc
             );
 
         } catch (java.util.InputMismatchException e) {
-            System.err.println("Erro: Entrada inválida. Por favor, insira apenas números inteiros onde solicitado.");
-            scanner.nextLine(); // Limpa o buffer
+            System.err.println("\nErro: Entrada inválida. Por favor, insira um número inteiro válido.");
+            scanner.nextLine();
             return null;
         }
     }
 
     // ... (calculateAndReport() permanece o mesmo) ...
-
     private static void calculateAndReport(int metricChoice, ClassAnalysisData data) {
         AbstractMetricCalculator calculator = null;
 
